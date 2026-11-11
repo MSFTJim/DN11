@@ -1,0 +1,8 @@
+
+curl -fsSL https://aka.ms/dotnetup/get-dotnetup.sh | bash
+
+echo $PATH | tr ':' '\n' | grep 'dotnet'
+
+dotnetup list
+dotnetup init
+dotnetup update
