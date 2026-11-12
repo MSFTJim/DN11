@@ -636,5 +636,16 @@
     "sku": "IG-NET-HEAD",
     "weightKg": 0.05,
     "description": "A head-mounted mosquito net for protection during camping."
+  },
+  {
+    "id": 59,
+    "name": "AA New Product Test 001",
+    "category": "Accessories",
+    "price": 52.23,
+    "stock": 12,
+    "brand": "WildFlame",
+    "sku": "985SP",
+    "weightKg": 22,
+    "description": "This is a description of a new test product."
   }
 ]

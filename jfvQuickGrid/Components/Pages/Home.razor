@@ -1,81 +1,9 @@
 ﻿@page "/"
-@implements IDisposable
-@inject ToastService ToastService
-@inject NotificationService NotificationService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Welcome</PageTitle>
 
-<h1>Blazor Test Harness</h1>
-
-<hr class="my-4" />
-
-<div class="d-flex align-items-center flex-wrap gap-3 mb-4">
-    <button type="button" class="btn btn-primary"
-        @onclick="() => childmodal!.Open()">
-        Open Modal
-    </button>
-
-    <div class="d-flex align-items-center gap-2">
-        <label for="modal-action-result" class="mb-0 text-nowrap">Last modal action</label>
-        <output id="modal-action-result" class="form-control" style="width: 20rem;" aria-live="polite">@ActionResult</output>
-    </div>
+<div class="text-center py-5">
+    <h1>Welcome to jfvQuickGrid</h1>
+    <p class="lead text-muted">Browse and manage your product catalog.</p>
+    <a class="btn btn-primary" href="/qgpopup">Open product catalog</a>
 </div>
-
-<ModalComponent @ref="childmodal" SendBtnClickedBackToParent="DisplayBtnClicked">
-    <Title> The Title</Title>
-    <Body> @ChildModalBody </Body>
-    <Footer>
-        <button type="button" class="btn btn-secondary"
-                @onclick="() => childmodal!.SendModalButtonClicked(ModalAction.Cancel)">
-            Cancel
-        </button>
-        <button type="button" class="btn btn-primary"
-                @onclick="() => childmodal!.SendModalButtonClicked(ModalAction.Ok)">
-            <span class="oi oi-cloud" aria-hidden="true"></span> OK
-        </button>
-    </Footer>
-</ModalComponent>
-
-<hr class="my-4" />
-
-<button class="btn btn-primary" @onclick='() => ToastService.Show("Toast shown from Home page.")'>Click here to call a toast component.</button>
-<button class="btn btn-secondary ms-2" @onclick='() => NotificationService.NotifyProductUpdated("Product updated notification received.")'>Test product update notification</button>
-
-@code {
-    private ModalComponent? childmodal;
-    private string ChildModalBody = "This is the body of the modal";
-    private string ActionResult = "No action received yet.";
-
-    protected override void OnInitialized()
-    {
-        NotificationService.OnProductUpdated += HandleProductUpdated;
-    }
-
-    private void HandleProductUpdated(string message)
-    {
-        ToastService.Show(message);
-    }
-
-    public void Dispose()
-    {
-        NotificationService.OnProductUpdated -= HandleProductUpdated;
-    }
-
-    private async Task DisplayBtnClicked(ModalAction action)
-    {
-        ChildModalBody = $"You previously clicked {action} button";
-        ActionResult = action switch
-        {
-            ModalAction.Ok => "OK action received.",
-            ModalAction.Cancel => "Cancel action received.",
-            ModalAction.Close => "Close action received.",
-            ModalAction.BackdropClick => "Modal dismissed by clicking outside.",
-            ModalAction.EscapeKey => "Modal dismissed with the Escape key.",
-            ModalAction.Save => "Save action received.",
-            ModalAction.Delete => "Delete action received.",
-            _ => "Unknown action received."
-        };
-        ToastService.Show(ActionResult);
-        await InvokeAsync(StateHasChanged);
-    }
-}

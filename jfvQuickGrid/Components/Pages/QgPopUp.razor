@@ -12,9 +12,12 @@
 
 <PageTitle>QuickGrid Popup</PageTitle>
 
-<h1>QuickGrid Popup</h1>
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <h1>QuickGrid Popup</h1>
+    <button type="button" class="btn btn-primary" @onclick="OpenNewProduct">Add product</button>
+</div>
 
-<p>Select a product row to edit its details.</p>
+<p>Select a product row to edit or delete it.</p>
 
 @if (isLoading)
 {
@@ -38,12 +41,21 @@ else
                 DialogClass="modal-lg"
                 SendBtnClickedBackToParent="HandleModalAction">
     <Title>
-        @editProduct.Name
-        <span class="text-muted fs-6"> (ID: @editProduct.Id)</span>
+        @(isCreating ? "New product" : editProduct.Name)
+        @if (!isCreating)
+        {
+            <span class="text-muted fs-6"> (ID: @editProduct.Id)</span>
+        }
     </Title>
     <Body>
-        <EditForm id="product-edit-form" Model="editProduct" OnValidSubmit="SaveProductAsync">
+        <EditForm id="product-form" Model="editProduct" OnValidSubmit="SaveProductAsync">
             <DataAnnotationsValidator />
+            @if (isConfirmingDelete)
+            {
+                <div class="alert alert-warning" role="alert">
+                    Delete <strong>@editProduct.Name</strong>? This action cannot be undone.
+                </div>
+            }
             <div class="row g-3">
                 <div class="col-12">
                     <label class="form-label" for="product-name">Product</label>
@@ -86,20 +98,38 @@ else
                     <ValidationMessage For="@(() => editProduct.Description)" />
                 </div>
             </div>
-            @if (saveError is not null)
+            @if (operationError is not null)
             {
-                <p class="text-danger" role="alert">@saveError</p>
+                <p class="text-danger mt-3 mb-0" role="alert">@operationError</p>
             }
         </EditForm>
     </Body>
     <Footer>
-        <button type="button" class="btn btn-secondary"
-                @onclick="() => productPUModal!.SendModalButtonClicked(ModalAction.Cancel)">
-            Cancel
-        </button>
-        <button type="submit" class="btn btn-primary" form="product-edit-form" disabled="@isSaving">
-            @(isSaving ? "Saving..." : "Save")
-        </button>
+        @if (isConfirmingDelete)
+        {
+            <button type="button" class="btn btn-secondary" @onclick="CancelDelete" disabled="@isSaving">
+                Keep product
+            </button>
+            <button type="button" class="btn btn-danger" @onclick="DeleteProductAsync" disabled="@isSaving">
+                @(isSaving ? "Deleting..." : "Confirm delete")
+            </button>
+        }
+        else
+        {
+            @if (!isCreating)
+            {
+                <button type="button" class="btn btn-danger" @onclick="RequestDelete" disabled="@isSaving">
+                    Delete
+                </button>
+            }
+            <button type="button" class="btn btn-secondary"
+                    @onclick="() => productPUModal!.SendModalButtonClicked(ModalAction.Cancel)">
+                Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" form="product-form" disabled="@isSaving">
+                @(isSaving ? "Saving..." : isCreating ? "Create product" : "Save")
+            </button>
+        }
     </Footer>
 </ModalComponent>
 
@@ -108,15 +138,17 @@ else
     private readonly PaginationState paginationState = new() { ItemsPerPage = 20 };
     private bool isLoading = true;
     private string? loadError;
-    private string? saveError;
+    private string? operationError;
     private bool isSaving;
+    private bool isCreating;
+    private bool isConfirmingDelete;
     private Product? productBeingEdited;
     private ProductEditModel editProduct = new();
     private ModalComponent? productPUModal;
 
     protected override void OnInitialized()
     {
-        NotificationService.OnProductUpdated += HandleProductUpdated;
+        NotificationService.OnProductChanged += HandleProductChanged;
     }
 
     protected override async Task OnInitializedAsync()
@@ -135,31 +167,121 @@ else
             Logger.LogError(exception, "The product data file contains invalid JSON.");
             loadError = "Product data could not be loaded. Check the server logs for details.";
         }
+        catch (InvalidDataException exception)
+        {
+            Logger.LogError(exception, "The product data file does not contain a valid product list.");
+            loadError = "Product data could not be loaded. Check the server logs for details.";
+        }
         finally
         {
             isLoading = false;
         }
     }
 
-    private void HandleProductUpdated(string message)
+    private void HandleProductChanged(string message)
     {
         _ = InvokeAsync(() => ToastService.Show(message));
     }
 
     public void Dispose()
     {
-        NotificationService.OnProductUpdated -= HandleProductUpdated;
+        NotificationService.OnProductChanged -= HandleProductChanged;
+    }
+
+    private void OpenNewProduct()
+    {
+        isCreating = true;
+        isConfirmingDelete = false;
+        productBeingEdited = null;
+        editProduct = new ProductEditModel();
+        operationError = null;
+        productPUModal!.Open();
     }
 
     private void HandleRowClick(Product product)
     {
+        isCreating = false;
+        isConfirmingDelete = false;
         productBeingEdited = product;
         editProduct = ProductEditModel.FromProduct(product);
-        saveError = null;
+        operationError = null;
         productPUModal!.Open();
     }
 
     private async Task SaveProductAsync()
+    {
+        if (!isCreating && productBeingEdited is null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        operationError = null;
+        try
+        {
+            if (isCreating)
+            {
+                var createdProduct = await ProductService.CreateProductAsync(editProduct.ToProduct(0));
+                products = products.Append(createdProduct).ToArray();
+            }
+            else
+            {
+                var productId = productBeingEdited!.Id;
+                var updatedProduct = editProduct.ToProduct(productId);
+                await ProductService.UpdateProductAsync(updatedProduct);
+                products = products
+                    .Select(product => product.Id == productId ? updatedProduct : product)
+                    .ToArray();
+            }
+
+            await productPUModal!.SendModalButtonClicked(ModalAction.Save);
+        }
+        catch (IOException exception)
+        {
+            Logger.LogError(exception, "Could not save the product.");
+            operationError = "Product changes could not be saved. Check the server logs for details.";
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Logger.LogError(exception, "The product data file is not writable.");
+            operationError = "Product changes could not be saved because the data file is not writable.";
+        }
+        catch (System.Text.Json.JsonException exception)
+        {
+            Logger.LogError(exception, "The product data file contains invalid JSON.");
+            operationError = "Product changes could not be saved because the product data file is invalid.";
+        }
+        catch (InvalidDataException exception)
+        {
+            Logger.LogError(exception, "The product data file does not contain a valid product list.");
+            operationError = "Product changes could not be saved because the product data file is invalid.";
+        }
+        catch (InvalidOperationException exception)
+        {
+            Logger.LogError(exception, "Could not update product {ProductId}.", productBeingEdited?.Id);
+            operationError = isCreating
+                ? "A new product ID could not be assigned."
+                : "This product is no longer available. Reload the catalog and try again.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void RequestDelete()
+    {
+        isConfirmingDelete = true;
+        operationError = null;
+    }
+
+    private void CancelDelete()
+    {
+        isConfirmingDelete = false;
+        operationError = null;
+    }
+
+    private async Task DeleteProductAsync()
     {
         if (productBeingEdited is null)
         {
@@ -167,25 +289,38 @@ else
         }
 
         isSaving = true;
-        saveError = null;
+        operationError = null;
         try
         {
-            var updatedProduct = editProduct.ToProduct(productBeingEdited.Id);
-            await ProductService.UpdateProductAsync(updatedProduct);
-            products = products
-                .Select(product => product.Id == productBeingEdited.Id ? updatedProduct : product)
-                .ToArray();
-            await productPUModal!.SendModalButtonClicked(ModalAction.Save);
+            var productId = productBeingEdited.Id;
+            await ProductService.DeleteProductAsync(productId);
+            products = products.Where(product => product.Id != productId).ToArray();
+            await productPUModal!.SendModalButtonClicked(ModalAction.Delete);
         }
         catch (IOException exception)
         {
-            Logger.LogError(exception, "Could not save product {ProductId}.", productBeingEdited.Id);
-            saveError = "Product changes could not be saved. Check the server logs for details.";
+            Logger.LogError(exception, "Could not delete product {ProductId}.", productBeingEdited.Id);
+            operationError = "Product could not be deleted. Check the server logs for details.";
         }
         catch (UnauthorizedAccessException exception)
         {
             Logger.LogError(exception, "The product data file is not writable.");
-            saveError = "Product changes could not be saved because the data file is not writable.";
+            operationError = "Product could not be deleted because the data file is not writable.";
+        }
+        catch (System.Text.Json.JsonException exception)
+        {
+            Logger.LogError(exception, "The product data file contains invalid JSON.");
+            operationError = "Product could not be deleted because the product data file is invalid.";
+        }
+        catch (InvalidDataException exception)
+        {
+            Logger.LogError(exception, "The product data file does not contain a valid product list.");
+            operationError = "Product could not be deleted because the product data file is invalid.";
+        }
+        catch (InvalidOperationException exception)
+        {
+            Logger.LogError(exception, "Could not find product {ProductId} to delete.", productBeingEdited.Id);
+            operationError = "This product is no longer available. Reload the catalog and try again.";
         }
         finally
         {
@@ -196,7 +331,9 @@ else
     private Task HandleModalAction(ModalAction action)
     {
         productBeingEdited = null;
-        saveError = null;
+        isCreating = false;
+        isConfirmingDelete = false;
+        operationError = null;
         return Task.CompletedTask;
     }
 

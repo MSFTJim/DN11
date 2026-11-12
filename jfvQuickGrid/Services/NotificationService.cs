@@ -2,10 +2,10 @@ namespace jfvQuickGrid.Services;
 
 public sealed class NotificationService
 {
-    public event Action<string>? OnProductUpdated;
+    public event Action<string>? OnProductChanged;
 
-    public void NotifyProductUpdated(string message)
+    public void NotifyProductChanged(string message)
     {
-        OnProductUpdated?.Invoke(message);
+        OnProductChanged?.Invoke(message);
     }
 }
