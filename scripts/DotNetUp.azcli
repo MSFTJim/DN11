@@ -8,3 +8,6 @@ echo $PATH | tr ':' '\n' | grep 'dotnet'
 dotnetup list
 dotnetup init
 dotnetup update
+
+dotnet --version
+dotnet --info
