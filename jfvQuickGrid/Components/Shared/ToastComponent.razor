@@ -1,0 +1,75 @@
+@implements IDisposable
+@using System
+@using System.Threading
+@inject ToastService ToastService
+
+@if (showMyToast)
+{
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="liveToast" class="toast fade show @(isToastShowing ? "showing" : "")" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header">
+      <img src="/favicon.png" class="rounded me-2" alt="...">
+      <strong class="me-auto">Notification</strong>
+      <small>@($"{secondsAgo} secs ago")</small>
+      <button type="button" class="btn-close" @onclick="CloseToast" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      @toastMessage
+    </div>
+  </div>
+</div>
+}
+
+@code {
+  private bool showMyToast = false;
+  private bool isToastShowing;
+  private int secondsAgo;
+  private string toastMessage = string.Empty;
+  private Timer? myTimer;
+
+  protected override void OnInitialized()
+  {
+    ToastService.OnShow += ShowToast;
+  }
+
+  private void ShowToast(string message)
+  {
+    _ = InvokeAsync(() =>
+    {
+      toastMessage = message;
+      showMyToast = true;
+      isToastShowing = true;
+      secondsAgo = Random.Shared.Next(1, 6);
+      myTimer?.Dispose();
+      myTimer = new Timer(CloseToast, null, 3000, Timeout.Infinite);
+      StateHasChanged();
+    });
+  }
+
+  protected override void OnAfterRender(bool firstRender)
+  {
+    if (showMyToast && isToastShowing)
+    {
+      isToastShowing = false;
+      StateHasChanged();
+    }
+  }
+
+  private void CloseToast(object? state)
+  {
+    _ = InvokeAsync(() =>
+    {
+      showMyToast = false;
+      StateHasChanged();
+      myTimer?.Dispose();
+      myTimer = null;
+    });
+  }
+
+  public void Dispose()
+  {
+    ToastService.OnShow -= ShowToast;
+    myTimer?.Dispose();
+  }
+
+}

@@ -1,0 +1,145 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject ILogger<ModalComponent> Logger
+
+<div class="modal @modalClass" tabindex="-1" role="dialog" style="display:@modalDisplay; overflow-y: auto;"
+     @onclick="BackdropClick">
+    <div class="modal-dialog @DialogClass" role="document" @onclick:stopPropagation="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">@Title</h5>
+                <button type="button" class="btn-close" aria-label="Close"
+                        style="transform: scale(0.82);" @onclick="XClose"></button>
+            </div>
+            <div class="modal-body">
+                @Body
+            </div>
+            <div class="modal-footer">
+                @Footer
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showBackdrop)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? Title { get; set; } = null!;
+
+    [Parameter]
+    public RenderFragment? Body { get; set; } = null!;
+
+    [Parameter]
+    public RenderFragment? Footer { get; set; } = null!;
+
+    [Parameter]
+    public string DialogClass { get; set; } = "modal-sm";
+
+    [Parameter]
+    public EventCallback<ModalAction> SendBtnClickedBackToParent { get; set; }
+
+
+
+    private string modalDisplay = "none;";
+    private string modalClass = "";
+    private bool showBackdrop = false;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<ModalComponent>? dotNetHelper;
+    private int? escapeHandlerId;
+
+    public void Open()
+    {
+        modalDisplay = "block;";
+        modalClass = "show";
+        showBackdrop = true;
+    }
+    private async Task  XClose()
+    {
+        await SendModalButtonClicked(ModalAction.Close);
+    }
+
+    private async Task BackdropClick()
+    {
+        await SendModalButtonClicked(ModalAction.BackdropClick);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (showBackdrop && escapeHandlerId is null)
+            {
+                module ??= await JS.InvokeAsync<IJSObjectReference>(
+                    "import", "./Components/Shared/ModalComponent.razor.js");
+                dotNetHelper ??= DotNetObjectReference.Create(this);
+                escapeHandlerId = await module.InvokeAsync<int>("registerEscapeHandler", dotNetHelper);
+            }
+            else if (!showBackdrop && escapeHandlerId is int id && module is not null)
+            {
+                await module.InvokeVoidAsync("unregisterEscapeHandler", id);
+                escapeHandlerId = null;
+                dotNetHelper?.Dispose();
+                dotNetHelper = null;
+            }
+        }
+        catch (JSDisconnectedException exception)
+        {
+            Logger.LogDebug(exception, "The browser disconnected while updating the modal Escape-key handler.");
+        }
+    }
+
+    [JSInvokable]
+    public Task HandleEscapeKey()
+    {
+        return InvokeAsync(async () =>
+        {
+            if (showBackdrop)
+            {
+                await SendModalButtonClicked(ModalAction.EscapeKey);
+                StateHasChanged();
+            }
+        });
+    }
+
+    public async Task SendModalButtonClicked(ModalAction action)
+    {
+        modalDisplay = "none";
+        modalClass = "";
+        showBackdrop = false;
+        
+        // HasDelegate appears to be a best practice so you don't invoke a callback if a call back listener (delegate) has not been set up.
+        if (SendBtnClickedBackToParent.HasDelegate)
+        {
+            await SendBtnClickedBackToParent.InvokeAsync(action);
+        }       
+
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (module is not null)
+            {
+                if (escapeHandlerId is int id)
+                {
+                    await module.InvokeVoidAsync("unregisterEscapeHandler", id);
+                }
+
+                await module.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException exception)
+        {
+            Logger.LogDebug(exception, "The browser disconnected while disposing the modal Escape-key handler.");
+        }
+        finally
+        {
+            dotNetHelper?.Dispose();
+        }
+    }
+}

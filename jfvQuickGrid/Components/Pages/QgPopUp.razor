@@ -1,0 +1,252 @@
+@page "/qgpopup"
+@implements IDisposable
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using System.ComponentModel.DataAnnotations
+@using jfvQuickGrid.Models
+@using jfvQuickGrid.Services
+@using jfvQuickGrid.Components.Shared
+@inject IProductService ProductService
+@inject NotificationService NotificationService
+@inject ToastService ToastService
+@inject ILogger<QgPopUp> Logger
+
+<PageTitle>QuickGrid Popup</PageTitle>
+
+<h1>QuickGrid Popup</h1>
+
+<p>Select a product row to edit its details.</p>
+
+@if (isLoading)
+{
+    <p>Loading products...</p>
+}
+else if (loadError is not null)
+{
+    <p class="text-danger" role="alert">@loadError</p>
+}
+else
+{
+    <QuickGrid TGridItem="Product" Items="products.AsQueryable()" Pagination="paginationState" Class="table table-striped" OnRowClick="HandleRowClick">
+        <PropertyColumn Property="product => product.Name" Title="Product" Sortable="true" />
+        <PropertyColumn Property="product => product.Price" Title="Price" Sortable="true" />
+        <PropertyColumn Property="product => product.Description" Title="Description" />
+    </QuickGrid>
+    <Paginator State="paginationState" />
+}
+
+<ModalComponent @ref="productPUModal"
+                DialogClass="modal-lg"
+                SendBtnClickedBackToParent="HandleModalAction">
+    <Title>
+        @editProduct.Name
+        <span class="text-muted fs-6"> (ID: @editProduct.Id)</span>
+    </Title>
+    <Body>
+        <EditForm id="product-edit-form" Model="editProduct" OnValidSubmit="SaveProductAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="product-name">Product</label>
+                    <InputText id="product-name" class="form-control" @bind-Value="editProduct.Name" />
+                    <ValidationMessage For="@(() => editProduct.Name)" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="product-category">Category</label>
+                    <InputText id="product-category" class="form-control" @bind-Value="editProduct.Category" />
+                    <ValidationMessage For="@(() => editProduct.Category)" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="product-brand">Brand</label>
+                    <InputText id="product-brand" class="form-control" @bind-Value="editProduct.Brand" />
+                    <ValidationMessage For="@(() => editProduct.Brand)" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="product-price">Price</label>
+                    <InputNumber id="product-price" class="form-control" @bind-Value="editProduct.Price" />
+                    <ValidationMessage For="@(() => editProduct.Price)" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="product-stock">In stock</label>
+                    <InputNumber id="product-stock" class="form-control" @bind-Value="editProduct.Stock" />
+                    <ValidationMessage For="@(() => editProduct.Stock)" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="product-sku">SKU</label>
+                    <InputText id="product-sku" class="form-control" @bind-Value="editProduct.Sku" />
+                    <ValidationMessage For="@(() => editProduct.Sku)" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="product-weight">Weight (kg)</label>
+                    <InputNumber id="product-weight" class="form-control" @bind-Value="editProduct.WeightKg" />
+                    <ValidationMessage For="@(() => editProduct.WeightKg)" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="product-description">Description</label>
+                    <InputTextArea id="product-description" class="form-control" @bind-Value="editProduct.Description" />
+                    <ValidationMessage For="@(() => editProduct.Description)" />
+                </div>
+            </div>
+            @if (saveError is not null)
+            {
+                <p class="text-danger" role="alert">@saveError</p>
+            }
+        </EditForm>
+    </Body>
+    <Footer>
+        <button type="button" class="btn btn-secondary"
+                @onclick="() => productPUModal!.SendModalButtonClicked(ModalAction.Cancel)">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" form="product-edit-form" disabled="@isSaving">
+            @(isSaving ? "Saving..." : "Save")
+        </button>
+    </Footer>
+</ModalComponent>
+
+@code {
+    private IReadOnlyList<Product> products = [];
+    private readonly PaginationState paginationState = new() { ItemsPerPage = 20 };
+    private bool isLoading = true;
+    private string? loadError;
+    private string? saveError;
+    private bool isSaving;
+    private Product? productBeingEdited;
+    private ProductEditModel editProduct = new();
+    private ModalComponent? productPUModal;
+
+    protected override void OnInitialized()
+    {
+        NotificationService.OnProductUpdated += HandleProductUpdated;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            products = await ProductService.GetProductsAsync();
+        }
+        catch (IOException exception)
+        {
+            Logger.LogError(exception, "Could not read the product data file.");
+            loadError = "Product data could not be loaded. Check the server logs for details.";
+        }
+        catch (System.Text.Json.JsonException exception)
+        {
+            Logger.LogError(exception, "The product data file contains invalid JSON.");
+            loadError = "Product data could not be loaded. Check the server logs for details.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void HandleProductUpdated(string message)
+    {
+        _ = InvokeAsync(() => ToastService.Show(message));
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnProductUpdated -= HandleProductUpdated;
+    }
+
+    private void HandleRowClick(Product product)
+    {
+        productBeingEdited = product;
+        editProduct = ProductEditModel.FromProduct(product);
+        saveError = null;
+        productPUModal!.Open();
+    }
+
+    private async Task SaveProductAsync()
+    {
+        if (productBeingEdited is null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        saveError = null;
+        try
+        {
+            var updatedProduct = editProduct.ToProduct(productBeingEdited.Id);
+            await ProductService.UpdateProductAsync(updatedProduct);
+            products = products
+                .Select(product => product.Id == productBeingEdited.Id ? updatedProduct : product)
+                .ToArray();
+            await productPUModal!.SendModalButtonClicked(ModalAction.Save);
+        }
+        catch (IOException exception)
+        {
+            Logger.LogError(exception, "Could not save product {ProductId}.", productBeingEdited.Id);
+            saveError = "Product changes could not be saved. Check the server logs for details.";
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Logger.LogError(exception, "The product data file is not writable.");
+            saveError = "Product changes could not be saved because the data file is not writable.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private Task HandleModalAction(ModalAction action)
+    {
+        productBeingEdited = null;
+        saveError = null;
+        return Task.CompletedTask;
+    }
+
+    private sealed class ProductEditModel
+    {
+        public int Id { get; set; }
+
+        [Required]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        public string Category { get; set; } = string.Empty;
+
+        [Range(typeof(decimal), "0", "999999999")]
+        public decimal Price { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public int Stock { get; set; }
+
+        [Required]
+        public string Brand { get; set; } = string.Empty;
+
+        [Required]
+        public string Sku { get; set; } = string.Empty;
+
+        [Range(typeof(decimal), "0", "999999999")]
+        public decimal WeightKg { get; set; }
+
+        [Required]
+        public string Description { get; set; } = string.Empty;
+
+        public static ProductEditModel FromProduct(Product product)
+        {
+            return new ProductEditModel
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Category = product.Category,
+                Price = product.Price,
+                Stock = product.Stock,
+                Brand = product.Brand,
+                Sku = product.Sku,
+                WeightKg = product.WeightKg,
+                Description = product.Description
+            };
+        }
+
+        public Product ToProduct(int id)
+        {
+            return new Product(id, Name, Category, Price, Stock, Brand, Sku, WeightKg, Description);
+        }
+    }
+}
