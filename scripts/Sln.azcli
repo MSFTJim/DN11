@@ -1,0 +1,2 @@
+dotnet new sln -n DN11
+dotnet sln add jfvQuickGrid/jfvQuickGrid.csproj
