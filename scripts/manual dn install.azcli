@@ -1,0 +1,31 @@
+dn_version="dn11"
+
+
+# make new folders
+mkdir ~/dotnet-versions
+cd ~/dotnet-versions
+mkdir ~/dotnet-versions/dn10
+mkdir ~/dotnet-versions/$dn_version
+# download and extract the .NET 11 RC2 runtime, and remove the tar.gz file
+cd ~/dotnet-versions/$dn_version
+wget https://builds.dotnet.microsoft.com/dotnet/Sdk/11.0.100/dotnet-sdk-11.0.100-linux-x64.tar.gz
+ls -lah
+tar -xzf dotnet-sdk-11.0.100-linux-x64.tar.gz
+rm ~/dotnet-versions/$dn_version/dotnet-sdk-11.0.100-linux-x64.tar.gz
+
+
+# copy DN10 into backup folder
+cd /usr/share/dotnet
+cp -r /usr/share/dotnet/* ~/dotnet-versions/dn10
+
+# clean dotnet folder
+rm -r /usr/share/dotnet/*
+ls -lah 
+
+## Move dn11rc2 to usr/share/dotnet
+cp -r ~/dotnet-versions/$dn_version/* /usr/share/dotnet
+
+echo $PATH | tr ':' '\n' | grep 'dotnet'
+which dotnet
+
+dotnet new console -o jfvTestDN11Rc2
