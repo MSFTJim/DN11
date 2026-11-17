@@ -12,12 +12,42 @@
 
 <PageTitle>QuickGrid Popup</PageTitle>
 
-<div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-    <h1>QuickGrid Popup</h1>
-    <button type="button" class="btn btn-primary" @onclick="OpenNewProduct">Add product</button>
+<div class="row g-3 align-items-center mb-4">
+    <div class="col-lg-5">
+        <div class="d-flex flex-column align-items-start gap-2">
+            <h1 class="h2 mb-0">QuickGrid Popup</h1>
+            <button type="button" class="btn btn-primary" @onclick="OpenNewProduct">Add product</button>
+        </div>
+        <p class="mt-2 mb-0">Select a product row to edit or delete it.</p>
+    </div>
+    <div class="col-lg-7">
+        @if (!isLoading && loadError is null && products.Count > 0)
+        {
+            <section class="card" aria-labelledby="products-by-category-heading">
+                <div class="card-header py-2">
+                    <h2 id="products-by-category-heading" class="h6 mb-0">Products by Category</h2>
+                </div>
+                <div class="card-body p-1">
+                    <SfAccumulationChart Height="280px">
+                        <AccumulationChartLegendSettings Visible="false" />
+                        <AccumulationChartTooltipSettings Enable="true" />
+                        <AccumulationChartSeriesCollection>
+                            <AccumulationChartSeries DataSource="categoryCounts"
+                                                     XName="@nameof(CategoryProductCount.Category)"
+                                                     YName="@nameof(CategoryProductCount.ProductCount)"
+                                                     Type="AccumulationType.Pie"
+                                                     InnerRadius="40%">
+                                <AccumulationDataLabelSettings Visible="true"
+                                                                Name="@nameof(CategoryProductCount.Label)"
+                                                                Position="AccumulationLabelPosition.Outside" />
+                            </AccumulationChartSeries>
+                        </AccumulationChartSeriesCollection>
+                    </SfAccumulationChart>
+                </div>
+            </section>
+        }
+    </div>
 </div>
-
-<p>Select a product row to edit or delete it.</p>
 
 @if (isLoading)
 {
@@ -145,6 +175,30 @@ else
     private Product? productBeingEdited;
     private ProductEditModel editProduct = new();
     private ModalComponent? productPUModal;
+    private IReadOnlyList<CategoryProductCount> categoryCounts
+    {
+        get
+        {
+            if (products.Count == 0)
+            {
+                return [];
+            }
+
+            var totalProductCount = products.Count;
+            return products
+                .GroupBy(product => product.Category)
+                .OrderBy(group => group.Key)
+                .Select(group =>
+                {
+                    var productCount = group.Count();
+                    return new CategoryProductCount(
+                        group.Key,
+                        productCount,
+                        (double)productCount / totalProductCount);
+                })
+                .ToArray();
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -385,5 +439,10 @@ else
         {
             return new Product(id, Name, Category, Price, Stock, Brand, Sku, WeightKg, Description);
         }
+    }
+
+    private sealed record CategoryProductCount(string Category, int ProductCount, double Share)
+    {
+        public string Label => $"{Category}, {ProductCount} ({Share:P0})";
     }
 }
