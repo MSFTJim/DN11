@@ -12,42 +12,13 @@
 
 <PageTitle>QuickGrid Popup</PageTitle>
 
-<div class="row g-3 align-items-center mb-4">
-    <div class="col-lg-5">
-        <div class="d-flex flex-column align-items-start gap-2">
-            <h1 class="h2 mb-0">QuickGrid Popup</h1>
-            <button type="button" class="btn btn-primary" @onclick="OpenNewProduct">Add product</button>
-        </div>
-        <p class="mt-2 mb-0">Select a product row to edit or delete it.</p>
+<section class="card mb-4" aria-labelledby="page-heading">
+    <div class="card-body d-flex flex-column align-items-start gap-2">
+        <h1 id="page-heading" class="h2 mb-0">QuickGrid Popup</h1>
+        <p class="mb-0">Select a product row to edit or delete it.</p>
+        <button type="button" class="btn btn-primary" @onclick="OpenNewProduct">Add product</button>
     </div>
-    <div class="col-lg-7">
-        @if (!isLoading && loadError is null && products.Count > 0)
-        {
-            <section class="card" aria-labelledby="products-by-category-heading">
-                <div class="card-header py-2">
-                    <h2 id="products-by-category-heading" class="h6 mb-0">Products by Category</h2>
-                </div>
-                <div class="card-body p-1">
-                    <SfAccumulationChart Height="280px">
-                        <AccumulationChartLegendSettings Visible="false" />
-                        <AccumulationChartTooltipSettings Enable="true" />
-                        <AccumulationChartSeriesCollection>
-                            <AccumulationChartSeries DataSource="categoryCounts"
-                                                     XName="@nameof(CategoryProductCount.Category)"
-                                                     YName="@nameof(CategoryProductCount.ProductCount)"
-                                                     Type="AccumulationType.Pie"
-                                                     InnerRadius="40%">
-                                <AccumulationDataLabelSettings Visible="true"
-                                                                Name="@nameof(CategoryProductCount.Label)"
-                                                                Position="AccumulationLabelPosition.Outside" />
-                            </AccumulationChartSeries>
-                        </AccumulationChartSeriesCollection>
-                    </SfAccumulationChart>
-                </div>
-            </section>
-        }
-    </div>
-</div>
+</section>
 
 @if (isLoading)
 {
@@ -59,12 +30,59 @@ else if (loadError is not null)
 }
 else
 {
-    <QuickGrid TGridItem="Product" Items="products.AsQueryable()" Pagination="paginationState" Class="table table-striped" OnRowClick="HandleRowClick">
-        <PropertyColumn Property="product => product.Name" Title="Product" Sortable="true" />
-        <PropertyColumn Property="product => product.Price" Title="Price" Sortable="true" />
-        <PropertyColumn Property="product => product.Description" Title="Description" />
-    </QuickGrid>
-    <Paginator State="paginationState" />
+    <div class="row g-4">
+        <section class="col-12 col-lg-8" aria-label="Product list">
+            <section class="card" aria-labelledby="product-list-heading">
+                <div class="card-header py-2">
+                    <h2 id="product-list-heading" class="h6 mb-0">Products</h2>
+                </div>
+                <div class="card-body p-0">
+                    <QuickGrid TGridItem="Product" Items="products.AsQueryable()" Pagination="paginationState" Class="table table-striped mb-0" OnRowClick="HandleRowClick">
+                        <PropertyColumn Property="product => product.Name" Title="Product" Sortable="true" />
+                        <PropertyColumn Property="product => product.Price" Title="Price" Sortable="true" />
+                        <PropertyColumn Property="product => product.Description" Title="Description" />
+                    </QuickGrid>
+                </div>
+                <div class="card-footer">
+                    <Paginator State="paginationState" />
+                </div>
+            </section>
+        </section>
+
+        <aside class="col-12 col-lg-4 d-flex flex-column gap-4" aria-label="Product charts">
+            @if (products.Count > 0)
+            {
+                <section class="card" aria-labelledby="products-by-category-heading">
+                    <div class="card-header py-2">
+                        <h2 id="products-by-category-heading" class="h6 mb-0">Products by Category</h2>
+                    </div>
+                    <div class="card-body p-1">
+                        <SfAccumulationChart Height="320px">
+                            <AccumulationChartLegendSettings Visible="true" Position="LegendPosition.Right" />
+                            <AccumulationChartTooltipSettings Enable="true" />
+                            <AccumulationChartSeriesCollection>
+                                <AccumulationChartSeries DataSource="categoryCounts"
+                                                         XName="@nameof(CategoryProductCount.Category)"
+                                                         YName="@nameof(CategoryProductCount.ProductCount)"
+                                                         Type="AccumulationType.Pie"
+                                                         InnerRadius="40%">
+                                </AccumulationChartSeries>
+                            </AccumulationChartSeriesCollection>
+                        </SfAccumulationChart>
+                    </div>
+                </section>
+            }
+
+            <section class="card chart-placeholder" aria-labelledby="product-chart-placeholder-heading">
+                <div class="card-header py-2">
+                    <h2 id="product-chart-placeholder-heading" class="h6 mb-0">Product Details</h2>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center text-muted">
+                    <p class="mb-0">Additional chart coming soon</p>
+                </div>
+            </section>
+        </aside>
+    </div>
 }
 
 <ModalComponent @ref="productPUModal"
@@ -191,10 +209,7 @@ else
                 .Select(group =>
                 {
                     var productCount = group.Count();
-                    return new CategoryProductCount(
-                        group.Key,
-                        productCount,
-                        (double)productCount / totalProductCount);
+                    return new CategoryProductCount(group.Key, productCount);
                 })
                 .ToArray();
         }
@@ -441,8 +456,5 @@ else
         }
     }
 
-    private sealed record CategoryProductCount(string Category, int ProductCount, double Share)
-    {
-        public string Label => $"{Category}, {ProductCount} ({Share:P0})";
-    }
+    private sealed record CategoryProductCount(string Category, int ProductCount);
 }
