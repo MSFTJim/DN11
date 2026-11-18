@@ -39,7 +39,7 @@ else
                 <div class="card-body p-0">
                     <QuickGrid TGridItem="Product" Items="products.AsQueryable()" Pagination="paginationState" Class="table table-striped mb-0" OnRowClick="HandleRowClick">
                         <PropertyColumn Property="product => product.Name" Title="Product" Sortable="true" />
-                        <PropertyColumn Property="product => product.Price" Title="Price" Sortable="true" />
+                        <PropertyColumn Property="product => product.Price" Title="Price" Format="'$'0.00" Class="text-end" Sortable="true" />
                         <PropertyColumn Property="product => product.Description" Title="Description" />
                     </QuickGrid>
                 </div>
@@ -73,12 +73,23 @@ else
                 </section>
             }
 
-            <section class="card chart-placeholder" aria-labelledby="product-chart-placeholder-heading">
+            <section class="card" aria-labelledby="products-by-price-heading">
                 <div class="card-header py-2">
-                    <h2 id="product-chart-placeholder-heading" class="h6 mb-0">Product Details</h2>
+                    <h2 id="products-by-price-heading" class="h6 mb-0">Products by Price Range</h2>
                 </div>
-                <div class="card-body d-flex align-items-center justify-content-center text-muted">
-                    <p class="mb-0">Additional chart coming soon</p>
+                <div class="card-body p-1">
+                    <SfChart Height="340px">
+                        <ChartTooltipSettings Enable="true" />
+                        <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"
+                                           Title="Price range" />
+                        <ChartPrimaryYAxis Title="Products" />
+                        <ChartSeriesCollection>
+                            <ChartSeries DataSource="priceRangeCounts"
+                                         XName="@nameof(PriceRangeProductCount.PriceRange)"
+                                         YName="@nameof(PriceRangeProductCount.ProductCount)"
+                                         Type="ChartSeriesType.Bar" />
+                        </ChartSeriesCollection>
+                    </SfChart>
                 </div>
             </section>
         </aside>
@@ -210,6 +221,34 @@ else
                 {
                     var productCount = group.Count();
                     return new CategoryProductCount(group.Key, productCount);
+                })
+                .ToArray();
+        }
+    }
+    private IReadOnlyList<PriceRangeProductCount> priceRangeCounts
+    {
+        get
+        {
+            if (products.Count == 0)
+            {
+                return [];
+            }
+
+            const decimal rangeSize = 25m;
+            var rangeCount = Math.Max(1, (int)decimal.Ceiling(products.Max(product => product.Price) / rangeSize));
+            return Enumerable.Range(0, rangeCount)
+                .Select(index =>
+                {
+                    var lowerBound = index * rangeSize;
+                    var upperBound = lowerBound + rangeSize;
+                    var productCount = products.Count(product =>
+                        product.Price <= upperBound &&
+                        (index == 0 ? product.Price >= lowerBound : product.Price > lowerBound));
+                    var label = index == 0
+                        ? $"${lowerBound:0}–${upperBound:0}"
+                        : $">${lowerBound:0}–${upperBound:0}";
+
+                    return new PriceRangeProductCount(label, productCount);
                 })
                 .ToArray();
         }
@@ -457,4 +496,5 @@ else
     }
 
     private sealed record CategoryProductCount(string Category, int ProductCount);
+    private sealed record PriceRangeProductCount(string PriceRange, int ProductCount);
 }
