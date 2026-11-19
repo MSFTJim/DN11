@@ -5,10 +5,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <UserSecretsId>8de33e64-72ab-40b0-9e43-a79ed06d3d16</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="11.0.0-rc.3.26522.148" />
+    <PackageReference Include="Syncfusion.Blazor.Charts" Version="35.1.46" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="35.1.46" />
+    <PackageReference Include="Syncfusion.Licensing" Version="35.1.46" />
   </ItemGroup>
 
   <ItemGroup>

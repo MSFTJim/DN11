@@ -12,12 +12,13 @@
 
 <PageTitle>QuickGrid Popup</PageTitle>
 
-<div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-    <h1>QuickGrid Popup</h1>
-    <button type="button" class="btn btn-primary" @onclick="OpenNewProduct">Add product</button>
-</div>
-
-<p>Select a product row to edit or delete it.</p>
+<section class="card mb-4" aria-labelledby="page-heading">
+    <div class="card-body d-flex flex-column align-items-start gap-2">
+        <h1 id="page-heading" class="h2 mb-0">QuickGrid Popup</h1>
+        <p class="mb-0">Select a product row to edit or delete it.</p>
+        <button type="button" class="btn btn-primary" @onclick="OpenNewProduct">Add product</button>
+    </div>
+</section>
 
 @if (isLoading)
 {
@@ -29,12 +30,70 @@ else if (loadError is not null)
 }
 else
 {
-    <QuickGrid TGridItem="Product" Items="products.AsQueryable()" Pagination="paginationState" Class="table table-striped" OnRowClick="HandleRowClick">
-        <PropertyColumn Property="product => product.Name" Title="Product" Sortable="true" />
-        <PropertyColumn Property="product => product.Price" Title="Price" Sortable="true" />
-        <PropertyColumn Property="product => product.Description" Title="Description" />
-    </QuickGrid>
-    <Paginator State="paginationState" />
+    <div class="row g-4">
+        <section class="col-12 col-lg-8" aria-label="Product list">
+            <section class="card" aria-labelledby="product-list-heading">
+                <div class="card-header py-2">
+                    <h2 id="product-list-heading" class="h6 mb-0">Products</h2>
+                </div>
+                <div class="card-body p-0">
+                    <QuickGrid TGridItem="Product" Items="products.AsQueryable()" Pagination="paginationState" Class="table table-striped mb-0" OnRowClick="HandleRowClick">
+                        <PropertyColumn Property="product => product.Name" Title="Product" Sortable="true" />
+                        <PropertyColumn Property="product => product.Price" Title="Price" Format="'$'0.00" Class="text-end" Sortable="true" />
+                        <PropertyColumn Property="product => product.Description" Title="Description" />
+                    </QuickGrid>
+                </div>
+                <div class="card-footer">
+                    <Paginator State="paginationState" />
+                </div>
+            </section>
+        </section>
+
+        <aside class="col-12 col-lg-4 d-flex flex-column gap-4" aria-label="Product charts">
+            @if (products.Count > 0)
+            {
+                <section class="card" aria-labelledby="products-by-category-heading">
+                    <div class="card-header py-2">
+                        <h2 id="products-by-category-heading" class="h6 mb-0">Products by Category</h2>
+                    </div>
+                    <div class="card-body p-1">
+                        <SfAccumulationChart Height="320px">
+                            <AccumulationChartLegendSettings Visible="true" Position="LegendPosition.Right" />
+                            <AccumulationChartTooltipSettings Enable="true" />
+                            <AccumulationChartSeriesCollection>
+                                <AccumulationChartSeries DataSource="categoryCounts"
+                                                         XName="@nameof(CategoryProductCount.Category)"
+                                                         YName="@nameof(CategoryProductCount.ProductCount)"
+                                                         Type="AccumulationType.Pie"
+                                                         InnerRadius="40%">
+                                </AccumulationChartSeries>
+                            </AccumulationChartSeriesCollection>
+                        </SfAccumulationChart>
+                    </div>
+                </section>
+            }
+
+            <section class="card" aria-labelledby="products-by-price-heading">
+                <div class="card-header py-2">
+                    <h2 id="products-by-price-heading" class="h6 mb-0">Products by Price Range</h2>
+                </div>
+                <div class="card-body p-1">
+                    <SfChart Height="340px">
+                        <ChartTooltipSettings Enable="true" />
+                        <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"
+                                           Title="Price range" />
+                        <ChartPrimaryYAxis Title="Products" />
+                        <ChartSeriesCollection>
+                            <ChartSeries DataSource="priceRangeCounts"
+                                         XName="@nameof(PriceRangeProductCount.PriceRange)"
+                                         YName="@nameof(PriceRangeProductCount.ProductCount)"
+                                         Type="ChartSeriesType.Bar" />
+                        </ChartSeriesCollection>
+                    </SfChart>
+                </div>
+            </section>
+        </aside>
+    </div>
 }
 
 <ModalComponent @ref="productPUModal"
@@ -145,6 +204,55 @@ else
     private Product? productBeingEdited;
     private ProductEditModel editProduct = new();
     private ModalComponent? productPUModal;
+    private IReadOnlyList<CategoryProductCount> categoryCounts
+    {
+        get
+        {
+            if (products.Count == 0)
+            {
+                return [];
+            }
+
+            var totalProductCount = products.Count;
+            return products
+                .GroupBy(product => product.Category)
+                .OrderBy(group => group.Key)
+                .Select(group =>
+                {
+                    var productCount = group.Count();
+                    return new CategoryProductCount(group.Key, productCount);
+                })
+                .ToArray();
+        }
+    }
+    private IReadOnlyList<PriceRangeProductCount> priceRangeCounts
+    {
+        get
+        {
+            if (products.Count == 0)
+            {
+                return [];
+            }
+
+            const decimal rangeSize = 25m;
+            var rangeCount = Math.Max(1, (int)decimal.Ceiling(products.Max(product => product.Price) / rangeSize));
+            return Enumerable.Range(0, rangeCount)
+                .Select(index =>
+                {
+                    var lowerBound = index * rangeSize;
+                    var upperBound = lowerBound + rangeSize;
+                    var productCount = products.Count(product =>
+                        product.Price <= upperBound &&
+                        (index == 0 ? product.Price >= lowerBound : product.Price > lowerBound));
+                    var label = index == 0
+                        ? $"${lowerBound:0}–${upperBound:0}"
+                        : $">${lowerBound:0}–${upperBound:0}";
+
+                    return new PriceRangeProductCount(label, productCount);
+                })
+                .ToArray();
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -386,4 +494,7 @@ else
             return new Product(id, Name, Category, Price, Stock, Brand, Sku, WeightKg, Description);
         }
     }
+
+    private sealed record CategoryProductCount(string Category, int ProductCount);
+    private sealed record PriceRangeProductCount(string PriceRange, int ProductCount);
 }
