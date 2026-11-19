@@ -1,13 +1,76 @@
+############################################################
+# Install DotNetUp
+############################################################
 
 curl -fsSL https://aka.ms/dotnetup/get-dotnetup.sh | bash
 
+# Add DotNetUp to PATH
 echo 'export PATH="/home/codespace/.dotnetup:$PATH"' >> ~/.bashrc
 
-echo $PATH | tr ':' '\n' | grep 'dotnet'
+# Refresh current terminal
+source ~/.bashrc
 
-dotnetup list
+############################################################
+# Install latest SDKs
+############################################################
+
+# Install and configure SDKs
 dotnetup init
+
+# Update to latest servicing releases
 dotnetup update
 
+############################################################
+# Environment Inspection
+############################################################
+
+# Show current PATH entries related to .NET
+echo $PATH | tr ':' '\n' | grep dotnet
+
+# Show active dotnet
+which dotnet
+
+# Show all dotnet executables visible via PATH
+type -a dotnet
+
+# Show .NET version
 dotnet --version
-dotnet --info
+
+# Show installed SDKs
+dotnet --list-sdks
+
+# Show DOTNET_ROOT
+echo $DOTNET_ROOT
+
+# Show .dotnet link
+ls -la ~/.dotnet
+
+# Show /usr/share/dotnet link
+ls -ld /usr/share/dotnet
+
+# Resolve links to actual target
+readlink -f ~/.dotnet/dotnet
+readlink -f /usr/bin/dotnet
+readlink -f /bin/dotnet
+
+############################################################
+# Preferred Fix (Single Source of Truth)
+############################################################
+
+sudo mv /usr/share/dotnet /usr/share/dotnet.old
+
+sudo ln -s /home/codespace/.local/share/dotnetup/dotnet /usr/share/dotnet
+
+############################################################
+# Verify
+############################################################
+
+/usr/share/dotnet/dotnet --version
+
+/usr/share/dotnet/dotnet --list-sdks
+
+############################################################
+# VS Code
+############################################################
+
+# Developer: Reload Window
