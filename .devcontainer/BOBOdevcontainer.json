@@ -1,7 +1,0 @@
-{
-    "image": "mcr.microsoft.com/devcontainers/universal:2",
-    "remoteEnv": {
-        "DOTNET_ROOT": "/home/codespace/.local/share/dotnetup/dotnet",
-        "PATH": "/home/codespace/.local/share/dotnetup/dotnet:${containerEnv:PATH}"
-    }
-}
