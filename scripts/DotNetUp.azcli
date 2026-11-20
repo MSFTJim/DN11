@@ -57,6 +57,8 @@ readlink -f /bin/dotnet
 # Preferred Fix (Single Source of Truth)
 ############################################################
 
+sudo rm -rf /usr/share/dotnet
+    -- OR  --
 sudo mv /usr/share/dotnet /usr/share/dotnet.old
 
 sudo ln -s /home/codespace/.local/share/dotnetup/dotnet /usr/share/dotnet
