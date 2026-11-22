@@ -1,3 +1,11 @@
 .product-dashboard > * {
     min-width: 0;
 }
+
+.card-surface {
+    --bs-card-bg: #242424;
+    --bs-card-color: #f8f9fa;
+    --bs-card-cap-bg: #303030;
+    --bs-card-cap-color: #f8f9fa;
+    --bs-card-border-color: #484848;
+}

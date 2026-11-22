@@ -21,11 +21,18 @@ nav-menu {
 
 .top-row {
     min-height: 3.5rem;
-    background-color: rgba(0,0,0,0.4);
+    background-color: #242424;
+    border-bottom: 1px solid #62427a;
 }
 
-.navbar-brand {
+.top-row .navbar-brand {
     font-size: 1.1rem;
+    color: #c6a9dc;
+}
+
+.top-row .navbar-brand:hover,
+.top-row .navbar-brand:focus {
+    color: #dbc9e9;
 }
 
 .bi {
@@ -68,7 +75,7 @@ nav-menu {
     }
 
     .nav-item ::deep .nav-link {
-        color: #d7d7d7;
+        color: #dedede;
         background: none;
         border: none;
         border-radius: 4px;
@@ -86,13 +93,17 @@ nav-menu {
 }
 
 .nav-item ::deep a.active {
-    background-color: rgba(255,255,255,0.37);
+    background-color: #62427a;
     color: white;
 }
 
 .nav-item ::deep .nav-link:hover {
-    background-color: rgba(255,255,255,0.1);
+    background-color: #38313d;
     color: white;
+}
+
+.nav-item ::deep a.active:hover {
+    background-color: #75548d;
 }
 
 .nav-scrollable {
