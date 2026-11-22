@@ -1,4 +1,4 @@
-Do not launch or open the application. Build-only validation is okay. End implementation summaries by asking me to test in my Codespace browser.
+Do not launch or open the application. Build-only validation is okay. End implementation summaries by asking me to test in my local device browser using Codespace port forwarding.
 
 This is a .NET 11 Blazor Web App using Interactive Server rendering. Follow the existing modern Razor Components setup: App.razor is the document root, Routes.razor sets @rendermode InteractiveServer, and Program.cs configures AddRazorComponents().AddInteractiveServerComponents() and MapRazorComponents<App>().AddInteractiveServerRenderMode(). Don’t introduce .NET 6-era hosting patterns or move the render mode without a clear need.
 
