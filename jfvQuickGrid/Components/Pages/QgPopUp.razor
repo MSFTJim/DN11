@@ -15,6 +15,35 @@
 <section class="card card-surface mb-4" aria-labelledby="page-heading">
     <div class="card-body">
         <h1 id="page-heading" class="h2 mb-0">Product Catalog Dashboard</h1>
+        @if (!isLoading && loadError is null)
+        {
+            <dl class="row g-3 mb-0 dashboard-metrics" aria-label="Product metrics">
+                <div class="col-6 col-md-3">
+                    <div class="metric-card">
+                        <dt>Products</dt>
+                        <dd>@products.Count</dd>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="metric-card">
+                        <dt>Categories</dt>
+                        <dd>@categoryCounts.Count</dd>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="metric-card">
+                        <dt>Avg Price</dt>
+                        <dd>@(averagePrice?.ToString("C0") ?? "—")</dd>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="metric-card">
+                        <dt>Inventory</dt>
+                        <dd>@totalInventory</dd>
+                    </div>
+                </div>
+            </dl>
+        }
     </div>
 </section>
 
@@ -34,11 +63,11 @@ else
                 <section class="card card-surface" aria-labelledby="product-list-heading">
                     <div class="card-header py-2 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2">
                         <h2 id="product-list-heading" class="h6 mb-0">Click a product row to edit or delete, or add a new product with the button.</h2>
-                        <button type="button" class="btn btn-primary" @onclick="OpenNewProduct">Add product</button>
+                        <button type="button" class="btn btn-purple" @onclick="OpenNewProduct">Add product</button>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <QuickGrid TGridItem="Product" Items="products.AsQueryable()" Pagination="paginationState" Class="table table-striped mb-0" OnRowClick="HandleRowClick">
+                            <QuickGrid TGridItem="Product" Items="products.AsQueryable()" Pagination="paginationState" Class="table table-striped product-table mb-0" OnRowClick="HandleRowClick">
                                 <PropertyColumn Property="product => product.Name" Title="Product" Sortable="true" />
                                 <PropertyColumn Property="product => product.Price" Title="Price" Format="'$'0.00" Class="text-end" Sortable="true" />
                                 <PropertyColumn Property="product => product.Description" Title="Description" />
@@ -59,8 +88,10 @@ else
                             <h2 id="products-by-category-heading" class="h6 mb-0">Products by Category</h2>
                         </div>
                         <div class="card-body p-1">
-                            <SfAccumulationChart Height="190px">
-                                <AccumulationChartLegendSettings Visible="true" Position="LegendPosition.Right" />
+                            <SfAccumulationChart Height="190px" Background="#242424">
+                                <AccumulationChartLegendSettings Visible="true" Position="LegendPosition.Right">
+                                    <AccumulationChartLegendFont Color="#f8f9fa" />
+                                </AccumulationChartLegendSettings>
                                 <AccumulationChartTooltipSettings Enable="true" />
                                 <AccumulationChartSeriesCollection>
                                     <AccumulationChartSeries DataSource="categoryCounts"
@@ -80,16 +111,23 @@ else
                         <h2 id="products-by-price-heading" class="h6 mb-0">Products by Price Range</h2>
                     </div>
                     <div class="card-body p-1">
-                        <SfChart Height="190px">
+                        <SfChart Height="190px" Background="#242424">
                             <ChartTooltipSettings Enable="true" />
                             <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category"
-                                               Title="Price range" />
-                            <ChartPrimaryYAxis Title="Products" />
+                                               Title="Price range">
+                                <ChartAxisLabelStyle Color="#f8f9fa" />
+                                <ChartAxisTitleStyle Color="#f8f9fa" />
+                            </ChartPrimaryXAxis>
+                            <ChartPrimaryYAxis Title="Products">
+                                <ChartAxisLabelStyle Color="#f8f9fa" />
+                                <ChartAxisTitleStyle Color="#f8f9fa" />
+                            </ChartPrimaryYAxis>
                             <ChartSeriesCollection>
                                 <ChartSeries DataSource="priceRangeCounts"
                                              XName="@nameof(PriceRangeProductCount.PriceRange)"
                                              YName="@nameof(PriceRangeProductCount.ProductCount)"
-                                             Type="ChartSeriesType.Bar" />
+                                             Type="ChartSeriesType.Bar"
+                                             Fill="#75548d" />
                             </ChartSeriesCollection>
                         </SfChart>
                     </div>
@@ -204,6 +242,8 @@ else
     private bool isSaving;
     private bool isCreating;
     private bool isConfirmingDelete;
+    private decimal? averagePrice => products.Count == 0 ? null : products.Average(product => product.Price);
+    private int totalInventory => products.Sum(product => product.Stock);
     private Product? productBeingEdited;
     private ProductEditModel editProduct = new();
     private ModalComponent? productPUModal;

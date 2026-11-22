@@ -2,10 +2,61 @@
     min-width: 0;
 }
 
+.dashboard-metrics {
+    margin-top: 1.25rem;
+}
+
+.metric-card {
+    height: 100%;
+    padding: .875rem 1rem;
+    background: #303030;
+    border: 1px solid #484848;
+    border-radius: .5rem;
+}
+
+.metric-card dt {
+    color: #c6a9dc;
+    font-size: .875rem;
+    font-weight: 600;
+}
+
+.metric-card dd {
+    margin: .35rem 0 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
 .card-surface {
     --bs-card-bg: #242424;
     --bs-card-color: #f8f9fa;
     --bs-card-cap-bg: #303030;
     --bs-card-cap-color: #f8f9fa;
     --bs-card-border-color: #484848;
+}
+
+.btn-purple {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #62427a;
+    --bs-btn-border-color: #62427a;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #75548d;
+    --bs-btn-hover-border-color: #75548d;
+    --bs-btn-focus-shadow-rgb: 117, 84, 141;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #62427a;
+    --bs-btn-active-border-color: #62427a;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #62427a;
+    --bs-btn-disabled-border-color: #62427a;
+}
+
+::deep .product-table {
+    --bs-table-color: #f8f9fa;
+    --bs-table-bg: #242424;
+    --bs-table-border-color: #484848;
+    --bs-table-striped-bg: #303030;
+    --bs-table-striped-color: #f8f9fa;
+    --bs-table-hover-bg: #383838;
+    --bs-table-hover-color: #f8f9fa;
 }
