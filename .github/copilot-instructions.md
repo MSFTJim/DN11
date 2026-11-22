@@ -1,3 +1,5 @@
 Do not launch or open the application. Build-only validation is okay. End implementation summaries by asking me to test in my Codespace browser.
 
 This is a .NET 11 Blazor Web App using Interactive Server rendering. Follow the existing modern Razor Components setup: App.razor is the document root, Routes.razor sets @rendermode InteractiveServer, and Program.cs configures AddRazorComponents().AddInteractiveServerComponents() and MapRazorComponents<App>().AddInteractiveServerRenderMode(). Don’t introduce .NET 6-era hosting patterns or move the render mode without a clear need.
+
+For sidebar icons, use the raw SVG from the official Bootstrap Icons page. Add it as a `data:image/svg+xml` background in `NavMenu.razor.css`, following the existing `.bi-*-nav-menu` rules and reusing the shared `.bi` sizing styles. Use `fill='white'`, percent-encode the SVG tags, and add the matching `<span class="bi bi-*-nav-menu" aria-hidden="true">` in `NavMenu.razor`. Don’t add an icon package or change other nav icons unless requested.
