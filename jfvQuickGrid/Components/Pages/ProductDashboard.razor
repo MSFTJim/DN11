@@ -1,4 +1,4 @@
-@page "/qgpopup"
+@page "/productdashboard"
 @implements IDisposable
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using System.ComponentModel.DataAnnotations
@@ -9,13 +9,13 @@
 @inject IProductService ProductService
 @inject NotificationService NotificationService
 @inject ToastService ToastService
-@inject ILogger<QgPopUp> Logger
+@inject ILogger<ProductDashboard> Logger
 
-<PageTitle>Product Catalog Dashboard</PageTitle>
+<PageTitle>Product Dashboard</PageTitle>
 
 <section class="card card-surface mb-4" aria-labelledby="page-heading">
     <div class="card-body">
-        <h1 id="page-heading" class="h2 mb-0">Product Catalog Dashboard</h1>
+        <h1 id="page-heading" class="h2 mb-0">Product Dashboard</h1>
         @if (!isLoading && loadError is null)
         {
             <dl class="row g-3 mb-0 dashboard-metrics" aria-label="Product metrics">
