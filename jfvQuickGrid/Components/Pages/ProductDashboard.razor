@@ -63,12 +63,19 @@ else
             <section class="col-12 col-xxl-8" aria-label="Product list">
                 <section class="card card-surface" aria-labelledby="product-list-heading">
                     <div class="card-header py-2 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2">
-                        <h2 id="product-list-heading" class="h6 mb-0">Click a product row to edit or delete, or add a new product with the button.</h2>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <h2 id="product-list-heading" class="h6 mb-0">Click a product row to edit or delete, or add a new product with the button.</h2>
+                            @if (selectedCategory is not null)
+                            {
+                                <span class="badge text-bg-secondary">Category: @selectedCategory</span>
+                                <button type="button" class="btn btn-sm btn-outline-light" @onclick="ClearCategoryFilterAsync">Clear filter</button>
+                            }
+                        </div>
                         <button type="button" class="btn btn-purple" @onclick="OpenNewProduct">Add product</button>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <QuickGrid TGridItem="Product" Items="products.AsQueryable()" Pagination="paginationState" Class="table table-striped product-table mb-0" OnRowClick="HandleRowClick">
+                            <QuickGrid TGridItem="Product" Items="filteredProducts.AsQueryable()" Pagination="paginationState" Class="table table-striped product-table mb-0" OnRowClick="HandleRowClick">
                                 <PropertyColumn Property="product => product.Name" Title="Product" Sortable="true" />
                                 <PropertyColumn Property="product => product.Price" Title="Price" Format="'$'0.00" Class="text-end" Sortable="true" />
                                 <PropertyColumn Property="product => product.Description" Title="Description" />
@@ -85,11 +92,13 @@ else
                 @if (products.Count > 0)
                 {
                     <section class="card card-surface" aria-labelledby="products-by-category-heading">
-                        <div class="card-header py-2">
+                        <div class="card-header py-2 d-flex flex-wrap align-items-center justify-content-between gap-1">
                             <h2 id="products-by-category-heading" class="h6 mb-0">Products by Category</h2>
+                            <span class="small text-muted">Click a slice to filter the grid</span>
                         </div>
                         <div class="card-body p-1">
                             <SfAccumulationChart Height="190px" Background="#242424">
+                                <AccumulationChartEvents OnPointClick="HandleCategoryPointClick" />
                                 <AccumulationChartLegendSettings Visible="true" Position="LegendPosition.Right">
                                     <AccumulationChartLegendFont Color="#f8f9fa" />
                                 </AccumulationChartLegendSettings>
@@ -243,11 +252,16 @@ else
     private bool isSaving;
     private bool isCreating;
     private bool isConfirmingDelete;
+    private string? selectedCategory;
     private decimal? averagePrice => products.Count == 0 ? null : products.Average(product => product.Price);
     private int totalInventory => products.Sum(product => product.Stock);
     private Product? productBeingEdited;
     private ProductEditModel editProduct = new();
     private ModalComponent? productPUModal;
+    private IReadOnlyList<Product> filteredProducts => selectedCategory is null
+        ? products
+        : products.Where(product => product.Category == selectedCategory).ToArray();
+
     private IReadOnlyList<CategoryProductCount> categoryCounts
     {
         get
@@ -333,6 +347,24 @@ else
     private void HandleProductChanged(string message)
     {
         _ = InvokeAsync(() => ToastService.Show(message));
+    }
+
+    private async void HandleCategoryPointClick(AccumulationPointEventArgs args)
+    {
+        if (args.Point.X is not string category)
+        {
+            return;
+        }
+
+        selectedCategory = category;
+        await paginationState.SetCurrentPageIndexAsync(0);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ClearCategoryFilterAsync()
+    {
+        selectedCategory = null;
+        await paginationState.SetCurrentPageIndexAsync(0);
     }
 
     public void Dispose()
