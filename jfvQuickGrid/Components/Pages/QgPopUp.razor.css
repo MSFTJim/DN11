@@ -9,13 +9,13 @@
 .metric-card {
     height: 100%;
     padding: .875rem 1rem;
-    background: #303030;
-    border: 1px solid #484848;
+    background: var(--app-surface-raised);
+    border: 1px solid var(--app-border);
     border-radius: .5rem;
 }
 
 .metric-card dt {
-    color: #c6a9dc;
+    color: var(--app-accent-light);
     font-size: .875rem;
     font-weight: 600;
 }
@@ -28,35 +28,35 @@
 }
 
 .card-surface {
-    --bs-card-bg: #242424;
-    --bs-card-color: #f8f9fa;
-    --bs-card-cap-bg: #303030;
-    --bs-card-cap-color: #f8f9fa;
-    --bs-card-border-color: #484848;
+    --bs-card-bg: var(--app-surface);
+    --bs-card-color: var(--app-text);
+    --bs-card-cap-bg: var(--app-surface-raised);
+    --bs-card-cap-color: var(--app-text);
+    --bs-card-border-color: var(--app-border);
 }
 
 .btn-purple {
     --bs-btn-color: #fff;
-    --bs-btn-bg: #62427a;
-    --bs-btn-border-color: #62427a;
+    --bs-btn-bg: var(--app-primary);
+    --bs-btn-border-color: var(--app-primary);
     --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #75548d;
-    --bs-btn-hover-border-color: #75548d;
+    --bs-btn-hover-bg: var(--app-primary-hover);
+    --bs-btn-hover-border-color: var(--app-primary-hover);
     --bs-btn-focus-shadow-rgb: 117, 84, 141;
     --bs-btn-active-color: #fff;
-    --bs-btn-active-bg: #62427a;
-    --bs-btn-active-border-color: #62427a;
+    --bs-btn-active-bg: var(--app-primary);
+    --bs-btn-active-border-color: var(--app-primary);
     --bs-btn-disabled-color: #fff;
-    --bs-btn-disabled-bg: #62427a;
-    --bs-btn-disabled-border-color: #62427a;
+    --bs-btn-disabled-bg: var(--app-primary);
+    --bs-btn-disabled-border-color: var(--app-primary);
 }
 
 ::deep .product-table {
-    --bs-table-color: #f8f9fa;
-    --bs-table-bg: #242424;
-    --bs-table-border-color: #484848;
-    --bs-table-striped-bg: #303030;
-    --bs-table-striped-color: #f8f9fa;
-    --bs-table-hover-bg: #383838;
-    --bs-table-hover-color: #f8f9fa;
+    --bs-table-color: var(--app-text);
+    --bs-table-bg: var(--app-surface);
+    --bs-table-border-color: var(--app-border);
+    --bs-table-striped-bg: var(--app-surface-raised);
+    --bs-table-striped-color: var(--app-text);
+    --bs-table-hover-bg: var(--app-background);
+    --bs-table-hover-color: var(--app-text);
 }

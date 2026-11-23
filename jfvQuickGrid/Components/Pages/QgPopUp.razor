@@ -2,6 +2,7 @@
 @implements IDisposable
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using System.ComponentModel.DataAnnotations
+@using System.Globalization
 @using jfvQuickGrid.Models
 @using jfvQuickGrid.Services
 @using jfvQuickGrid.Components.Shared
@@ -21,25 +22,25 @@
                 <div class="col-6 col-md-3">
                     <div class="metric-card">
                         <dt>Products</dt>
-                        <dd>@products.Count</dd>
+                        <dd>@products.Count.ToString("N0", CultureInfo.InvariantCulture)</dd>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="metric-card">
                         <dt>Categories</dt>
-                        <dd>@categoryCounts.Count</dd>
+                        <dd>@categoryCounts.Count.ToString("N0", CultureInfo.InvariantCulture)</dd>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="metric-card">
                         <dt>Avg Price</dt>
-                        <dd>@(averagePrice?.ToString("C0") ?? "—")</dd>
+                        <dd>@(averagePrice?.ToString("$#,##0", CultureInfo.InvariantCulture) ?? "—")</dd>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="metric-card">
                         <dt>Inventory</dt>
-                        <dd>@totalInventory</dd>
+                        <dd>@totalInventory.ToString("N0", CultureInfo.InvariantCulture)</dd>
                     </div>
                 </div>
             </dl>

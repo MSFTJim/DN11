@@ -10,12 +10,12 @@ main {
 }
 
 .sidebar {
-    background-color: #242424;
+    background-color: var(--app-surface);
 }
 
 .top-row {
-    background-color: #242424;
-    border-bottom: 1px solid #62427a;
+    background-color: var(--app-surface);
+    border-bottom: 1px solid var(--app-primary);
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
@@ -23,7 +23,7 @@ main {
 }
 
     .top-row ::deep a, .top-row ::deep .btn-link {
-        color: #c6a9dc;
+        color: var(--app-accent-light);
         white-space: nowrap;
         margin-left: 1.5rem;
         text-decoration: none;
@@ -31,7 +31,7 @@ main {
 
     .top-row ::deep a:hover, .top-row ::deep .btn-link:hover,
     .top-row ::deep a:focus, .top-row ::deep .btn-link:focus {
-        color: #dbc9e9;
+        color: var(--app-accent-hover);
         text-decoration: underline;
     }
 
@@ -60,7 +60,7 @@ main {
         height: 100vh;
         position: sticky;
         top: 0;
-        border-right: 1px solid #62427a;
+        border-right: 1px solid var(--app-primary);
     }
 
     .top-row {

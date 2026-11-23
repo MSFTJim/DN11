@@ -1,4 +1,4 @@
 .home-brand-icon {
-    color: #c6a9dc;
+    color: var(--app-accent-light);
     flex: 0 0 auto;
 }

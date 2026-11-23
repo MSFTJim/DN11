@@ -21,13 +21,13 @@ nav-menu {
 
 .top-row {
     min-height: 3.5rem;
-    background-color: #242424;
-    border-bottom: 1px solid #62427a;
+    background-color: var(--app-surface);
+    border-bottom: 1px solid var(--app-primary);
 }
 
 .top-row .navbar-brand {
     font-size: 1.1rem;
-    color: #c6a9dc;
+    color: var(--app-accent-light);
 }
 
 .top-row .navbar-brand .bi-recycle-nav-menu {
@@ -40,7 +40,7 @@ nav-menu {
 
 .top-row .navbar-brand:hover,
 .top-row .navbar-brand:focus {
-    color: #dbc9e9;
+    color: var(--app-accent-hover);
 }
 
 .bi {
@@ -139,7 +139,7 @@ nav-menu {
     }
 
     .nav-item ::deep .nav-link {
-        color: #dedede;
+        color: var(--app-nav-text);
         background: none;
         border: none;
         border-radius: 4px;
@@ -157,17 +157,17 @@ nav-menu {
 }
 
 .nav-item ::deep a.active {
-    background-color: #62427a;
+    background-color: var(--app-primary);
     color: white;
 }
 
 .nav-item ::deep .nav-link:hover {
-    background-color: #38313d;
+    background-color: var(--app-nav-hover);
     color: white;
 }
 
 .nav-item ::deep a.active:hover {
-    background-color: #75548d;
+    background-color: var(--app-primary-hover);
 }
 
 .nav-scrollable {

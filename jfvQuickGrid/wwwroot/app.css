@@ -1,10 +1,69 @@
+:root {
+    --app-background: #383838;
+    --app-surface: #242424;
+    --app-surface-raised: #303030;
+    --app-border: #484848;
+    --app-text: #f8f9fa;
+    --app-text-muted: #c0c0c0;
+    --app-primary: #62427a;
+    --app-primary-hover: #75548d;
+    --app-accent-light: #c6a9dc;
+    --app-accent-hover: #dbc9e9;
+    --app-nav-hover: #38313d;
+    --app-nav-text: #dedede;
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 body {
-    background-color: #383838;
-    color: #f8f9fa;
+    background-color: var(--app-background);
+    color: var(--app-text);
+}
+
+.modal-content {
+    color: var(--app-text);
+    background-color: var(--app-surface);
+    border-color: var(--app-border);
+}
+
+.modal-header,
+.modal-footer {
+    border-color: var(--app-border);
+}
+
+.modal-content .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.modal-content .form-control {
+    color: var(--app-text);
+    background-color: var(--app-surface-raised);
+    border-color: var(--app-border);
+}
+
+.modal-content .form-control::placeholder {
+    color: var(--app-text-muted);
+}
+
+.modal-content .form-control:focus {
+    color: var(--app-text);
+    background-color: var(--app-surface-raised);
+    border-color: var(--app-primary-hover);
+    box-shadow: 0 0 0 0.25rem rgb(117 84 141 / 25%);
+}
+
+.modal-content .btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--app-primary);
+    --bs-btn-border-color: var(--app-primary);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--app-primary-hover);
+    --bs-btn-hover-border-color: var(--app-primary-hover);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--app-primary);
+    --bs-btn-active-border-color: var(--app-primary);
 }
 
 a, .btn-link {
